@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simplepdl:Process
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:simplepdl="http://simplepdl"
+    xsi:schemaLocation="http://simplepdl SimplePDL.ecore">
+  <ProcessElements
+      xsi:type="simplepdl:WorkDefinition"
+      linksToSuccessors="//@ProcessElements.1"
+      name="activity0"/>
+  <ProcessElements
+      xsi:type="simplepdl:WorkSequence"
+      predecessor="//@ProcessElements.0"/>
+</simplepdl:Process>

@@ -1,0 +1,70 @@
+import 'SimplePDL.ecore'
+
+package simplepdl
+
+context Process
+inv warningSeverity: true
+inv withMessage('Explicit message in process ' + self.name + ' (withMessage)'): true
+--inv errorSeverity: null
+
+context Process
+inv validName('Invalid name: ' + self.name):
+	self.name.matches('[A-Za-z_][A-Za-z0-9_]+')
+
+context ProcessElement
+def: process(): Process =
+	Process.allInstances()
+		->select(p | p.processElements->includes(self))
+		->asSequence()->first()
+
+context WorkSequence
+inv successorAndPredecessorInSameProcess('Activities not in the same process : '
+		+ self.predecessor.name + ' in ' + self.predecessor.process().name+ ' and '
+		+ self.successor.name + ' in ' + self.successor.process().name
+):
+	self.process() = self.successor.process()
+	and self.process() = self.predecessor.process()
+
+inv notReflexive : self.predecessor <> self.successor
+
+context Process
+inv differentNamesWd : 
+		self.processElements
+		-> select(pe: ProcessElement | pe.oclIsKindOf(WorkDefinition)) 
+		-> collect(pe: ProcessElement | pe.oclAsType(WorkDefinition)) 
+		-> forAll(wd1, wd2 : WorkDefinition | wd1<>wd2 implies wd1.name<>wd2.name)
+
+
+
+context Process
+def: WorkDefinitions():
+Collection(WorkDefinition)=
+self.processElements 
+-> select(pe|pe.oclIsTypeOf(WorkDefinition)) 
+-> collect (pe|pe.oclAsType(WorkDefinition))
+
+
+
+inv nbRessources:
+	self.WorkDefinitions() ->forAll(wd:WorkDefinition | 
+	forAll(ru:=wd.ressourcesUtilisees : RessourceUtilisation| ru.nombre < ru.Ressource.quantity))
+
+
+--quantité positive
+inv quantitePositive : 
+	self.WorkDefinitions() ->forAll(wd:WorkDefinition | 
+	forAll(ru:=wd.ressourcesUtilisees : RessourceUtilisation| ru.nombre >=0))
+
+--noms différents
+inv differentNamesR1 :
+	self.WorkDefinitions() ->forAll(wd:WorkDefinition | 
+	forAll(ru1:=wd.ressourcesUtilisees, ru2:=wd.ressourcesUtilisees|
+	ru1<>ru2 implies ru1.name<>ru2.name))
+
+inv differentNamesR2 :
+	self.WorkDefinitions()->forAll(wd1, wd2 : WorkDefinition |
+	forAll(ru1:=wd1.ressourcesUtilisees, ru2:=wd2.ressourcesUtilisees|
+	ru1<>ru2 implies ru1.name<>ru2.name))
+	)
+
+endpackage

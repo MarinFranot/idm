@@ -1,0 +1,77 @@
+[comment encoding = UTF-8 /]
+[module toDot('http://simplepdl')]
+
+[template public processToDot(aProcess : Process)]
+[comment @main/]
+[file (aProcess.name + '.dot', false, 'UTF-8')]
+digraph developpement {
+[let wss : OrderedSet(WorkSequence) = aProcess.getWSs() ] 
+[for (ws : WorkSequenceType | wss)]
+[ws.Predecessor/] -> [ws.successor/] "["[arrowhead=vee label = ws.linkType/]"]"
+[wd.toDot()/]
+
+[/for]
+[/let]
+
+}
+[/file]
+[/template]
+
+
+[query public getWDs(p: Process) : OrderedSet(WorkDefinition) = 
+	p.processElements->select( e | e.oclIsTypeOf(WorkDefinition) )
+		->collect( e | e.oclAsType(WorkDefinition) )
+		->asOrderedSet()
+/]
+
+
+
+[query public getWSs(p: Process) : OrderedSet(WorkSequence) = 
+	p.processElements->select( e | e.oclIsTypeOf(WorkSequence) )
+		->collect( e | e.oclAsType(WorkSequence) )
+		->asOrderedSet()
+/]
+
+[query public toState(link: WorkSequenceType) : String =
+	if link = WorkSequenceType::startToStart or link = WorkSequenceType::startToFinish then
+		'started'
+	else
+		'finished'
+	endif
+/]
+
+[template public toHTML(wd : WorkDefinition) post (trim()) ]
+[wd.name /] [for (ws: WorkSequence | wd.linksToPredecessors)
+		    before (' requires ') separator (', ') after('.')
+][ws.predecessor.name /] to be [ws.linkType.toState()
+/][/for]
+[/template]
+
+[template public toDotLine(ws : WorkSequence) post (trim()) ]
+[ws.predecessor.name /] -> [ws.successor.name /] ['['/] arrowhead=vee label=[']'/] [ws.linkType.toState() /])
+
+digraph developpement {
+Conception -> RedactionDoc [arrowhead=vee label=f2f]
+Conception -> RedactionDoc [arrowhead=vee label=s2s]
+Conception -> Programmation [arrowhead=vee label=f2s]
+Conception -> RedactionTests [arrowhead=vee label=s2s]
+Programmation -> RedactionTests [arrowhead=vee label=f2f]
+}
+
+[query public toState(link: WorkSequenceType) : String =
+	if link = WorkSequenceType::startToStart then
+		's2s'
+	else if link = WorkSequenceType::startToFinish then
+		's2f'
+	else if link = WorkSequenceType::finishToStart then
+		'f2s'
+	else if link = WorkSequenceType::finishToFinish then
+		'f2f'
+	endif
+/]
+
+[for (ws: WorkSequence | wd.linksToPredecessors)
+		    before (' requires ') separator (', ') after('.')
+][ws.predecessor.name /] to be [ws.linkType.toState()
+/][/for]
+[/template]

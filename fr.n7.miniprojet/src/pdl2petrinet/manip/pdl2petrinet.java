@@ -1,5 +1,6 @@
 package pdl2petrinet.manip;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -38,11 +39,12 @@ public class pdl2petrinet {
 		URI modelURIpdl = URI.createURI("models/SimplePDL.xmi");
 		Resource resourcePDL = resPDL.getResource(modelURIpdl, true);
 		
-		URI modelURIpetri = URI.createURI("models/Petri.xmi");
-		Resource resourcePetri = resPetri.getResource(modelURIpetri, true);
-		
 		// RÃ©cupÃ©rer le premier Ã©lÃ©ment du modÃ¨le (Ã©lÃ©ment racine)
 		Process process = (Process) resourcePDL.getContents().get(0);
+		
+		URI modelURIpetri = URI.createURI("models/PetriNet_" + process.getName() + ".xmi");
+		Resource resourcePetri = resPetri.createResource(modelURIpetri);
+		System.out.println("Ressource created: " + resourcePetri);
 		
 		PetriNetFactory petriFactory = PetriNetFactory.eINSTANCE;
 		
@@ -52,6 +54,7 @@ public class pdl2petrinet {
 		EList<Arc> arcs = petrinet.getArcs();
 		
 		
+		// On crée d'abord les places pour toutes les WorkDefinition
 		for (Object obj : process.getProcessElements()) {
 			if (obj instanceof WorkDefinition) {
 				WorkDefinition wd = (WorkDefinition) obj;
@@ -115,29 +118,12 @@ public class pdl2petrinet {
 				a_f2fd.setWeight(1);
 				arcs.add(a_f2fd);
 			}
-			else if (obj instanceof WorkSequence){
+		}
+		
+		// Puis on traite les WorkSequence
+		for (Object obj : process.getProcessElements()) {
+			if (obj instanceof WorkSequence) {
 				WorkSequence ws = (WorkSequence) obj;
-				/*
-				a_s2s:PetriNet!Arc(
-						name <- ws.predecessor.name + 'to' + ws.successor.name
-						source <-
-							(if (ws.kind=#S2S or ) then 
-								this.resolveTemps(ws.predecessor, 'p_started')
-							else this.resolveTemps(ws.predecessor, 'p_finished') endif),
-						target <-
-							thisModule.resolveTemps(ws.successor, if(ws.kind=#S2S)then't_starts'))),
-				endif
-				if(ws.kind = #S2F)	
-					a_s2f:PetriNet!Arc(source<-this.resolveTemps(ws.predecessor, 'p_started'),
-					(target<-thisModule.resolveTemps(ws.successor, 't_finishes'))),
-				if(ws.kind = #F2S)	
-					a_f2s:PetriNet!Arc(source<-this.resolveTemps(ws.predecessor, 'p_finished'),
-					(target<-thisModule.resolveTemps(ws.successor, 't_starts'))),
-					
-				if(ws.kind = #F2F)	
-					a_f2f:PetriNet!Arc(source<-this.resolveTemps(ws.predecessor, 'p_finished'),
-					(target<-thisModule.resolveTemps(ws.successor, 't_finishes'))),
-				*/	
 				Arc a_s2s = petriFactory.createArc();
 				a_s2s.setName(ws.getPredecessor().getName() + "to" + ws.getSuccessor().getName());
 				if (ws.getLinkType() == WorkSequenceType.START_TO_START) {
@@ -149,15 +135,36 @@ public class pdl2petrinet {
 					a_s2s.setTarget(t);
 					a_s2s.setWeight(1);
 					arcs.add(a_s2s);
-					}
 				}
-				
-				
-				
-							
+			}
+		}
+		
+		// Puis on traite les Ressource
+		for (Object obj : process.getProcessElements()) {
+			 if (obj instanceof Ressource) {
+				Ressource ressource = (Ressource) obj;
+				Place p_ressource = petriFactory.createPlace();
+				p_ressource.setName(ressource.getName() + "_ressource");
+				p_ressource.setNumber(ressource.getQuantity());
+				nodes.add(p_ressource);
+			}
+		}
+		
+		// Puis on traite les RessourceUtilisation
+		for (Object obj : process.getProcessElements()) {
+			 if (obj instanceof RessourceUtilisation) {
+				RessourceUtilisation ressourceUtilisation = (RessourceUtilisation) obj;
+				Ressource ressource = ressourceUtilisation.getRessource();
 				
 			}
 		}
+		
+	    try {
+	    	resourcePetri.save(Collections.EMPTY_MAP);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 		
 		
 		

@@ -13,6 +13,7 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 
 import simplepdl.Process;
 import simplepdl.impl.SimplePDLPackageImpl;
+import simplepdl.impl.WorkDefinitionImpl;
 import simplepdl.*;
 import simplepdl.WorkSequenceType;
 
@@ -53,12 +54,18 @@ public class pdl2petrinet {
 		EList<Node> nodes = petrinet.getNodes();
 		EList<Arc> arcs = petrinet.getArcs();
 		
+		resourcePetri.getContents().add(petrinet);
+		
 		
 		// On crée d'abord les places pour toutes les WorkDefinition
 		for (Object obj : process.getProcessElements()) {
+			
+			System.out.println(obj.getClass().toString());
+			
 			if (obj instanceof WorkDefinition) {
 				WorkDefinition wd = (WorkDefinition) obj;
 				
+				System.out.println("wd : " + wd);
 				
 				Place p_ready = petriFactory.createPlace();
 				p_ready.setName(wd.getName() + "_ready");
@@ -81,13 +88,13 @@ public class pdl2petrinet {
 				nodes.add(p_running);
 						
 				Transition t_starts = petriFactory.createTransition();
-				t_starts.setName(wd.getName()+ "_Starts");
+				t_starts.setName(wd.getName()+ "_starts");
 				nodes.add(t_starts);
 				
 				Transition t_finishes = petriFactory.createTransition();
-				t_finishes.setName(wd.getName()+ "_Finishes");	
+				t_finishes.setName(wd.getName()+ "_finishes");	
 				nodes.add(t_finishes);
-				
+								
 				Arc a_r2s = petriFactory.createArc();
 				a_r2s.setSource(p_ready);
 				a_r2s.setTarget(t_starts);
@@ -129,8 +136,8 @@ public class pdl2petrinet {
 				if (ws.getLinkType() == WorkSequenceType.START_TO_START) {
 					Place p;
 					Transition t;
-					p = (Place)getNode(nodes, ws, "p_started", true);
-					t = (Transition)getNode(nodes, ws, "t_starts", false);
+					p = (Place) getNode(nodes, ws, "_started", true);
+					t = (Transition) getNode(nodes, ws, "_starts", false);
 					a_s2s.setSource(p);
 					a_s2s.setTarget(t);
 					a_s2s.setWeight(1);
@@ -155,7 +162,6 @@ public class pdl2petrinet {
 			 if (obj instanceof RessourceUtilisation) {
 				RessourceUtilisation ressourceUtilisation = (RessourceUtilisation) obj;
 				Ressource ressource = ressourceUtilisation.getRessource();
-				
 			}
 		}
 		
@@ -165,41 +171,18 @@ public class pdl2petrinet {
 			e.printStackTrace();
 		}
 	}
-		
-		
-		
-		
-		/*
-		
-		 * Manipulation de notre instance
-		 
-		// AccÃ©der aux informations du processus chargÃ©
-	    System.out.println("Processus : " + process.getName());
-	    // Naviguer dans les rÃ©fÃ©rences
-	    Integer nbPE = process.getProcessElements().size();
-	    System.out.println("Nombre de ProcessElement dans " + process.getName() + " : " + nbPE);
 
-		// Afficher les sous-activitÃ©s
-		System.out.println("Les sous-activitÃ©s sont :");
-		for (Object o : process.getProcessElements()) {
-			if (o instanceof WorkDefinition) {
-				WorkDefinition wd = (WorkDefinition) o;
-				System.out.println("  - " + wd.getName());
-			}
-		}
-		*/
-	    
-	
-	
 	private static Node getNode (EList<Node> nodes, WorkSequence ws, String suffixe, Boolean place) {
-		Node p=null;
-		for (Node n : nodes) {
+		Node p = null;
+		for (Node n: nodes) {
+			System.out.println("node : " + n);
 			if (place && n instanceof Place & n.getName().compareTo(ws.getPredecessor().getName() + suffixe) == 0) {
-				p =  n;
-			}else if (!place && n instanceof Transition & n.getName().compareTo(ws.getPredecessor().getName() + suffixe) == 0) {
-				p =  n;
+				p = n;
+			} else if (!place && n instanceof Transition & n.getName().compareTo(ws.getPredecessor().getName() + suffixe) == 0) {
+				p = n;
 			}
 		}
+		System.out.println("p: " + p);
 		return p;
 	}
 

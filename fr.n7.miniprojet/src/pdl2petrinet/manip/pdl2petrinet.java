@@ -162,6 +162,7 @@ public class pdl2petrinet {
 			 if (obj instanceof RessourceUtilisation) {
 				RessourceUtilisation ressourceUtilisation = (RessourceUtilisation) obj;
 				Ressource ressource = ressourceUtilisation.getRessource();
+				
 			}
 		}
 		

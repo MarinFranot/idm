@@ -59,25 +59,60 @@ rule WorkSequence2PetriNet {
 	to 
 	
 		
-			a_s2s:PetriNet!Arc(
-				name <- ws.predecessor.name + 'to' + ws.successor.name
-				source <-
-					(if (ws.kind=#S2S or ) then 
-						this.resolveTemps(ws.predecessor, 'p_started')
-					else this.resolveTemps(ws.predecessor, 'p_finished') endif),
-				target <-
-					thisModule.resolveTemps(ws.successor, if(ws.kind=#S2S)then't_starts'))),
-		endif
-		if(ws.kind = #S2F)	
-			a_s2f:PetriNet!Arc(source<-this.resolveTemps(ws.predecessor, 'p_started'),
-			(target<-thisModule.resolveTemps(ws.successor, 't_finishes'))),
-		if(ws.kind = #F2S)	
-			a_f2s:PetriNet!Arc(source<-this.resolveTemps(ws.predecessor, 'p_finished'),
-			(target<-thisModule.resolveTemps(ws.successor, 't_starts'))),
-			
-		if(ws.kind = #F2F)	
-			a_f2f:PetriNet!Arc(source<-this.resolveTemps(ws.predecessor, 'p_finished'),
-			(target<-thisModule.resolveTemps(ws.successor, 't_finishes'))),
+		arc:PetriNet!Arc(
+			name <- ws.predecessor.name + 'to' + ws.successor.name,
+			source <- thisModule.resolveTemps(ws.predecessor,
+				if((ws.linkType = #S2S) or (ws.linkType = #S2F))
+				then
+					'p_started'
+				else
+					'p_finished'
+				endif),
+			target <- thisModule.resolveTemps(ws.successor,
+				if((ws.linkType = #F2S) or (ws.linkType = #S2S))
+				then 
+					't_starts'
+				else
+					't_finishes'
+				endif)
+					
 		
+		)
+	
+--			a_s2s:PetriNet!Arc(
+--				name <- ws.predecessor.name + 'to' + ws.successor.name
+--				source <-
+--					(if (ws.kind=#S2S or ws.kind = #S2F) then 
+--						this.resolveTemps(ws.predecessor, 'p_started')
+--					else this.resolveTemps(ws.predecessor, 'p_finished') endif),
+--				target <-
+--					thisModule.resolveTemps(ws.successor, if(ws.kind=#S2S)then't_starts'))),
+--		endif
+--		if(ws.kind = #S2F)	
+--			a_s2f:PetriNet!Arc(source<-this.resolveTemps(ws.predecessor, 'p_started'),
+--			(target<-thisModule.resolveTemps(ws.successor, 't_finishes'))),
+--		if(ws.kind = #F2S)	
+--			a_f2s:PetriNet!Arc(source<-this.resolveTemps(ws.predecessor, 'p_finished'),
+--			(target<-thisModule.resolveTemps(ws.successor, 't_starts'))),
+--			
+--		if(ws.kind = #F2F)	
+--			a_f2f:PetriNet!Arc(source<-this.resolveTemps(ws.predecessor, 'p_finished'),
+--			(target<-thisModule.resolveTemps(ws.successor, 't_finishes'))),
 		
+}
+
+rule Ressource2PetriNet {
+	from r:SimplePDL!Ressource
+	to
+		p_res:PetriNet!place( name <- r.name,
+			number <- r.quantity)
+	
+}
+
+rule RessourceUtilisation2PetriNet {
+	from ru:SimplePDL!RessourceUtilisation
+	to
+		p_ru:PetriNet!place(ressource <- ru.ressource,
+			marking <- ru.ressource)
+	
 }

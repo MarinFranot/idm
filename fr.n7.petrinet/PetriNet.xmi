@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simplepdl:PetriNet
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:simplepdl="http://simplepdl"
+    xsi:schemaLocation="http://simplepdl PetriNet.ecore">
+  <arc Weight="1"
+      target="//@node.3"
+      source="//@node.0"/>
+  <arc/>
+  <node Name="noeud 1"
+      Outgoing="//@arc.0"/>
+  <node Name="noeud 2"/>
+  <node xsi:type="simplepdl:Transition"
+      Name="transition"/>
+  <node xsi:type="simplepdl:Place"
+      Name="P"
+      ingoing="//@arc.0"/>
+</simplepdl:PetriNet>
